@@ -5,7 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import session from "express-session";
 import expressLayouts from "express-ejs-layouts";
-import fs from "fs";
+import fs from "fs"
 
 // Routes
 import authRoutes from "./routes/auth.js";
@@ -25,6 +25,8 @@ app.use(cookieParser());
 
 // Serve static files from public
 app.use(express.static(path.join(__dirname, "public")));
+
+
 
 app.use(session({
   secret: "biasharaSecret123",

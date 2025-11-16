@@ -1,0 +1,194 @@
+/* ----------------------------------
+   GLOBAL STYLES
+---------------------------------- */
+body {
+    background: #f3f5fa;
+    font-family: "Poppins", sans-serif;
+}
+
+* {
+    transition: all 0.25s ease-in-out;
+}
+
+
+
+/* ----------------------------------
+   COLOR PALETTE
+   (You can tweak these 4 main colors anytime)
+---------------------------------- */
+:root {
+    --primary: #0057ff;     /* Electric blue */
+    --primary-dark: #003bbd;
+    --accent: #ffb703;      /* Gold-yellow */
+    --accent-dark: #d79400;
+    --light-bg: #f6f7fb;
+    --text-dark: #222;
+}
+
+
+
+/* ----------------------------------
+   HERO SECTION
+---------------------------------- */
+.hero-section {
+    background:
+        linear-gradient(120deg, rgba(0, 87, 255, 0.65), rgba(255, 183, 3, 0.55)),
+        url('/images/1762695089887.jpeg') center/cover no-repeat;
+    height: 70vh;
+    border-bottom: 5px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0 20px;
+}
+
+.hero-section h1 {
+    font-size: 3.2rem;
+    font-weight: 800;
+    color: #fff;
+}
+
+.hero-section p {
+    font-size: 1.2rem;
+    color: #f8f8f8;
+}
+
+.hero-section .btn-main {
+    padding: 14px 38px;
+    background: var(--accent);
+    border: none;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 40px;
+    color: #000;
+}
+
+.hero-section .btn-main:hover {
+    background: var(--accent-dark);
+}
+
+
+
+/* ----------------------------------
+   PRODUCT CARDS
+---------------------------------- */
+.product-card {
+    border-radius: 16px;
+    background: #fff;
+    border: 1px solid #e3e6ef;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    overflow: hidden;
+    transition: 0.3s;
+}
+
+.product-card img {
+    height: 220px;
+    width: 100%;
+    object-fit: cover;
+}
+
+.product-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 14px 30px rgba(0,0,0,0.15);
+    border-color: var(--accent);
+}
+
+.product-card .card-body h5 {
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.product-card .price {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+
+
+/* ----------------------------------
+   CATEGORY BOXES
+---------------------------------- */
+.category-box {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border-radius: 14px;
+    padding: 32px;
+    font-size: 1.3rem;
+    font-weight: 600;
+    box-shadow: 0 6px 16px rgba(0,87,255,0.25);
+    cursor: pointer;
+}
+
+.category-box:hover {
+    transform: translateY(-5px);
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    box-shadow: 0 10px 25px rgba(255,183,3,0.35);
+}
+
+
+
+/* ----------------------------------
+   NAVBAR
+---------------------------------- */
+.navbar {
+    background: linear-gradient(90deg, #00296b, #014f86);
+    padding: 15px 0;
+}
+
+.navbar-brand {
+    font-size: 1.7rem;
+    font-weight: 700;
+    letter-spacing: 0.7px;
+    color: var(--accent) !important;
+}
+
+.nav-link {
+    color: #dce8ff !important;
+    font-weight: 500;
+}
+
+.nav-link:hover {
+    color: var(--accent) !important;
+}
+
+
+
+/* ----------------------------------
+   FOOTER
+---------------------------------- */
+.footer {
+    background: linear-gradient(90deg, #111, #000);
+    padding: 25px;
+}
+
+.footer p {
+    margin: 0;
+    color: #bbb;
+}
+
+
+
+/* ----------------------------------
+   BUTTONS
+---------------------------------- */
+.btn-primary {
+    background: var(--primary);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+}
+
+.btn-accent {
+    background: var(--accent);
+    color: #000;
+    border-radius: 25px;
+    font-weight: 600;
+}
+
+.btn-accent:hover {
+    background: var(--accent-dark);
+}
+ 
