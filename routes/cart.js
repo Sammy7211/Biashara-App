@@ -14,18 +14,19 @@ router.post("/add/:id", async (req, res) => {
   if (!req.session.cart) req.session.cart = [];
 
   // Check if product already in cart
-  const existing = req.session.cart.find(item => item.id === productId);
+  const existing = req.session.cart.find(item => item.productId === productId);
   if (existing) {
     existing.quantity += quantity;
   } else {
     req.session.cart.push({
-      id: product._id.toString(),
+      productId: product._id.toString(),   // ✅ consistent key
       name: product.name,
       price: product.price,
       quantity: quantity
     });
   }
 
+  req.session.cart = req.session.cart; // ensure session updated
   res.redirect("/cart");
 });
 
@@ -40,7 +41,7 @@ router.get("/", (req, res) => {
 router.get("/remove/:id", (req, res) => {
   const productId = req.params.id;
   if (req.session.cart) {
-    req.session.cart = req.session.cart.filter(item => item.id !== productId);
+    req.session.cart = req.session.cart.filter(item => item.productId !== productId);
   }
   res.redirect("/cart");
 });
@@ -52,7 +53,7 @@ router.post("/update/:id", (req, res) => {
 
   if (req.session.cart) {
     req.session.cart = req.session.cart.map(item => {
-      if (item.id === productId) {
+      if (item.productId === productId) {
         return { ...item, quantity: parseInt(quantity) };
       }
       return item;

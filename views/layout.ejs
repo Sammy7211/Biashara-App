@@ -21,6 +21,36 @@
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
+
+      <!-- SEARCH & FILTER BAR -->
+<div class="container search-filter-wrapper mt-4 mb-4">
+    <div class="row g-3">
+
+        <!-- Search Input -->
+        <div class="col-md-8">
+            <input 
+                type="text" 
+                id="searchInput" 
+                class="form-control search-box" 
+                placeholder="Search for a product (e.g., cars, art, electronics)...">
+        </div>
+
+        <!-- Category Filter -->
+        <div class="col-md-4">
+            <select id="categoryFilter" class="form-select filter-box">
+                <option value="all">All Categories</option>
+                <option value="cars">cars</option>
+                <option value="electronics">electronics</option>
+                <option value="clothes">clothes</option>
+                <option value="furniture">furniture</option>
+            </select>
+        </div>
+
+    </div>
+</div>
+
+
+
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item"><a class="nav-link" href="/products">Products</a></li>
