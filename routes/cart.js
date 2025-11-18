@@ -10,19 +10,21 @@ router.post("/add/:id", async (req, res) => {
 
   if (!req.session.cart) req.session.cart = [];
 
+  const productId = product._id.toString();
+  const requestedQty = parseInt(req.body.quantity || 1);
+
   // Check if product already in cart
   const existing = req.session.cart.find(item => item.productId === productId);
   if (existing) {
-    existing.quantity += quantity;
+    existing.quantity += requestedQty;
   } else {
     req.session.cart.push({
-      productId: product._id.toString(),   // ✅ consistent key
+      productId,
       name: product.name,
       price: product.price,
-      quantity: quantity
+      quantity: requestedQty
     });
   }
- const requestedQty = parseInt(req.body.quantity || 1);
 
   // Stock check
   if (requestedQty > product.quantity) {
@@ -31,21 +33,10 @@ router.post("/add/:id", async (req, res) => {
 
   // Deduct stock immediately
   product.quantity -= requestedQty;
-  await product.save()
+  await product.save();
 
-
-  if (!req.session.cart) req.session.cart = [];
-  req.session.cart.push({
-    id: product._id.toString(),
-    name: product.name,
-    price: product.price,
-    quantity: requestedQty
-  });
-
-  req.session.cart = req.session.cart; // ensure session updated
   res.redirect("/cart");
 });
-
 
 // View cart
 router.get("/cart", (req, res) => {
@@ -66,6 +57,7 @@ router.get("/remove/:id", (req, res) => {
 // Update quantity
 router.post("/cart/update/:id", (req, res) => {
   const { quantity } = req.body;
+  const productId = req.params.id;
 
   if (req.session.cart) {
     req.session.cart = req.session.cart.map(item => {

@@ -5,7 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import session from "express-session";
 import expressLayouts from "express-ejs-layouts";
-import fs from "fs"
+import fs from "fs";
 
 // Routes
 import authRoutes from "./routes/auth.js";
@@ -26,8 +26,6 @@ app.use(cookieParser());
 // Serve static files from public
 app.use(express.static(path.join(__dirname, "public")));
 
-
-
 app.use(session({
   secret: "biasharaSecret123",
   resave: false,
@@ -41,13 +39,10 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
 // ===== Routes =====
-// Mount auth routes at root so /login and /register work directly
 app.use("/", authRoutes);
-
-// Other routes
-app.use("/products", productRoutes);   // -> /products, /products/add
-app.use("/cart", cartRoutes);          // -> /cart/add/:id, /cart/remove/:id
-app.use("/checkout", checkoutRoutes);  // -> /checkout
+app.use("/products", productRoutes);
+app.use("/cart", cartRoutes);
+app.use("/checkout", checkoutRoutes);
 
 // Redirect root to /login
 app.get("/", (req, res) => {
@@ -59,8 +54,11 @@ app.get("/test-image/:filename", (req, res) => {
   const filename = req.params.filename;
   const imgPath = path.join(__dirname, "public/images", filename);
   fs.access(imgPath, fs.constants.F_OK, (err) => {
-    if (err) res.send(`❌ File does NOT exist: ${imgPath}`);
-    else res.send(`✅ File exists: ${imgPath}`);
+    if (err) {
+      res.send(`❌ File does NOT exist: ${imgPath}`);
+    } else {
+      res.send(`✅ File exists: ${imgPath}`);
+    }
   });
 });
 
