@@ -1,0 +1,13 @@
+<h2 class="mb-4">Select Role</h2>
+
+<form action="/select-role" method="POST">
+  <div class="mb-3">
+    <label for="role" class="form-label">Choose your role:</label>
+    <select name="role" id="role" class="form-control" required>
+      <% roles.forEach(r => { %>
+        <option value="<%= r %>"><%= r %></option>
+      <% }) %>
+    </select>
+  </div>
+  <button type="submit" class="btn btn-primary">Continue</button>
+</form>

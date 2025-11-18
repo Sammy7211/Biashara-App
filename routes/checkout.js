@@ -15,17 +15,30 @@ router.post("/", async (req, res) => {
   try {
     const cart = req.session.cart || [];
 
-    // Reduce stock for each product in the cart
     for (let item of cart) {
-      const product = await Product.findById(item.productId);
+      const product = await Product.findById(item.id); // ✅ use item.id
 
       if (!product) continue;
 
-      // Prevent overselling
-      if (product.quantity < item.quantity) {
-        return res.status(400).send(`Not enough stock for ${product.name}`);
+      // Restriction: seller cannot buy their own product
+      if (
+        req.session.user &&
+        req.session.user.role === "seller" &&
+        product.sellerId.toString() === req.session.user.id
+      ) {
+        return res
+          .status(403)
+          .send(`❌ Sellers cannot purchase their own product: ${product.name}`);
       }
 
+      // Prevent overselling
+      if (product.quantity < item.quantity) {
+        return res
+          .status(400)
+          .send(`❌ Not enough stock for ${product.name}. Available: ${product.quantity}`);
+      }
+
+      // Deduct stock
       product.quantity -= item.quantity;
       await product.save();
     }

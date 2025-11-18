@@ -1,5 +1,18 @@
 <h2 class="mb-4">Available Products</h2>
-<a href="/products/add" class="btn btn-primary mb-3">Add New Product</a>
+
+<% if (user && user.role === 'seller') { %>
+  <!-- Seller actions -->
+  <a href="/products/add" class="btn btn-primary mb-3">Add New Product</a>
+  <a href="/products/dashboard" class="btn btn-info mb-3">Seller Dashboard</a>
+<% } %>
+
+<% if (user && user.role === "buyer") { %>
+  <!-- Buyer upgrade option -->
+  <form action="/upgrade-role" method="POST" class="mb-3">
+    <input type="hidden" name="role" value="seller">
+    <button type="submit" class="btn btn-warning">Become a Seller</button>
+  </form>
+<% } %>
 
 <div class="row">
   <% if (products.length === 0) { %>
@@ -13,11 +26,28 @@
             <h5 class="card-title"><%= product.name %></h5>
             <p class="card-text"><%= product.description %></p>
             <p class="card-text fw-bold">KSh <%= product.price %></p>
+            <p class="card-text">Stock: <%= product.quantity %></p>
 
-            <form action="/cart/add/<%= product._id %>" method="POST" class="mt-auto">
-              <input type="number" name="quantity" value="1" min="1" class="form-control mb-2">
-              <button type="submit" class="btn btn-success w-100">Add to Cart</button>
-            </form>
+            <% if (product.quantity === 0) { %>
+              <!-- Out of stock -->
+              <span class="badge bg-danger mb-2">Out of Stock</span>
+              <button class="btn btn-secondary w-100" disabled>Unavailable</button>
+
+            <% } else if (user && user.role === 'seller' && product.sellerId.toString() === user.id) { %>
+              <!-- Seller restriction -->
+              <button class="btn btn-secondary w-100" disabled>Cannot Buy Your Own Product</button>
+
+            <% } else { %>
+              <!-- Buyer purchase -->
+              <% if (product.quantity < 5) { %>
+                <span class="badge bg-warning text-dark mb-2">Only <%= product.quantity %> left!</span>
+              <% } %>
+              <form action="/cart/add/<%= product._id %>" method="POST" class="mt-auto">
+                <input type="number" name="quantity" value="1" min="1" max="<%= product.quantity %>" class="form-control mb-2">
+                <button type="submit" class="btn btn-success w-100">Add to Cart</button>
+              </form>
+            <% } %>
+
           </div>
         </div>
       </div>

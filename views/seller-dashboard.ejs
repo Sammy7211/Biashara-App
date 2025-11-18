@@ -1,0 +1,40 @@
+<h2 class="mb-4">Seller Dashboard</h2>
+
+<p>Welcome, <%= user.name %>!</p>
+<a href="/products/add" class="btn btn-primary mb-3">Add New Product</a>
+
+<% if (products.length === 0) { %>
+  <p>You have not added any products yet.</p>
+<% } else { %>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Product</th>
+        <th>Stock</th>
+        <th>Price (KSh)</th>
+        <th>Potential Earnings (KSh)</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% products.forEach(p => { %>
+        <tr>
+          <td><%= p.name %></td>
+          <td><%= p.quantity %></td>
+          <td><%= p.price %></td>
+          <td><%= p.price * p.quantity %></td>
+          <td>
+            <!-- Delete button -->
+            <form action="/products/delete/<%= p._id %>" method="POST" style="display:inline;">
+              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </form>
+            <!-- Edit button (optional) -->
+            <a href="/products/edit/<%= p._id %>" class="btn btn-warning btn-sm">Edit</a>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <p class="fw-bold">Total Potential Earnings: KSh <%= totalEarnings %></p>
+<% } %>

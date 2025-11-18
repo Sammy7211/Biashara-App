@@ -4,8 +4,8 @@ const userSchema = new mongoose.Schema({
   firstName: String,
   lastName: String,
   email: { type: String, unique: true },
-  password: String
+  password: String,
+  roles: { type: [String], default: ["buyer"] } // <-- make roles an array
 });
 
-const User = mongoose.model("User", userSchema);
-export default User;
+export default mongoose.model("User", userSchema);
