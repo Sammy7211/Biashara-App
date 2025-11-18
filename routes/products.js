@@ -5,211 +5,100 @@ import path from "path";
 
 const router = express.Router();
 
-// Multer setup
+// ===== Multer setup =====
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "public/images"),
-  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname)
+  destination: (req, file, cb) => {
+    cb(null, "public/images"); // save uploads in /public/images
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
 });
-
 const upload = multer({ storage });
 
-// View all products
-router.get("/", async (req, res) => {
-  const products = await Product.find();
-  res.render("products", { 
-    products,
-  user: req.session.user || null
- });
-});
-
-// Add product form
-router.get("/add", (req, res) => {
-    console.log("Session user:", req.session.user); 
-  if (!req.session.user || req.session.user.role !== "seller") {
-    return res.send("Only sellers can add products");
-  }
-  res.render("add-product");
-});
-
-// Add product
-router.post("/add", upload.single("image"), async (req, res) => {
-  if (!req.session.user) return res.send("Unauthorized");
-
-  const { name, description, price, quantity } = req.body;
-
-  const product = new Product({
-    name,
-    description,
-    price,
-    quantity,
-    image: req.file.filename,
-    sellerId: req.session.user.id   // NEW
-  });
-
-  await product.save();
-  res.redirect("/products");
-});
-
-// Seller dashboard
-router.get("/dashboard", async (req, res) => {
-  if (!req.session.user || req.session.user.role !== "seller") {
-    return res.send("Unauthorized – only sellers can access the dashboard");
-  }
-
+// ===== Seller dashboard =====
+router.get("/seller-dashboard", async (req, res) => {
   try {
-    // Fetch products belonging to this seller
-    const sellerProducts = await Product.find({ sellerId: req.session.user.id });
+    if (!req.session.user) return res.redirect("/login");
 
-    // Calculate potential earnings (price × stock)
-    const totalEarnings = sellerProducts.reduce(
-      (sum, p) => sum + (p.price * p.quantity),
-      0
-    );
-
-    const message = req.session.message;
-    delete req.session.message; // clear after showing
+    const products = await Product.find({ sellerId: req.session.user._id });
+    const totalEarnings = products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
 
     res.render("seller-dashboard", {
-      products: sellerProducts,
-      totalEarnings,
       user: req.session.user,
-      message
+      products,
+      totalEarnings
     });
   } catch (err) {
     console.error("❌ Dashboard error:", err);
-    res.send("Error loading dashboard");
+    res.status(500).send("Error loading dashboard");
   }
 });
 
-// Delete product (seller only)
-router.post("/delete/:id", async (req, res) => {
-  if (!req.session.user || req.session.user.role !== "seller") {
-    return res.send("Unauthorized");
-  }
+// ===== Add product form =====
+router.get("/add", (req, res) => {
+  if (!req.session.user) return res.redirect("/login");
+  res.render("add-product", { user: req.session.user });
+});
 
+// ===== Handle product creation =====
+router.post("/add", upload.single("image"), async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    if (!req.session.user) return res.redirect("/login");
 
-    // Ensure product belongs to this seller
-    if (!product || product.sellerId.toString() !== req.session.user.id) {
-      return res.send("Unauthorized – cannot delete this product");
-    }
+    const newProduct = new Product({
+      name: req.body.name,
+      description: req.body.description,
+      price: Number(req.body.price),
+      quantity: Number(req.body.quantity),
+      image: req.file ? req.file.filename : null, // ✅ multer handles file
+      sellerId: req.session.user._id
+    });
 
-    await Product.deleteOne({ _id: req.params.id });
-    console.log("✅ Product deleted:", product.name);
-
-    res.redirect("/products/dashboard");
+    await newProduct.save();
+    res.redirect("/products/seller-dashboard");
   } catch (err) {
-    console.error("❌ Delete error:", err);
-    res.send("Error deleting product");
+    console.error("❌ Error adding product:", err);
+    res.status(500).send("Error adding product");
   }
 });
 
-// Render edit product form
-router.get("/edit/:id", async (req, res) => {
-  if (!req.session.user || req.session.user.role !== "seller") {
-    return res.send("Unauthorized");
-  }
-
+// ===== Product listing with filters =====
+router.get("/", async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const { q, minPrice, maxPrice, category, sort } = req.query;
+    const filter = {};
 
-    // Ensure product belongs to this seller
-    if (!product || product.sellerId.toString() !== req.session.user.id) {
-      return res.send("Unauthorized – cannot edit this product");
+    if (q) filter.name = { $regex: q, $options: "i" };
+    if (category && category !== "all") filter.category = category;
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = parseFloat(minPrice);
+      if (maxPrice) filter.price.$lte = parseFloat(maxPrice);
     }
 
-    res.render("edit-product", { product, user: req.session.user });
-  } catch (err) {
-    console.error("❌ Edit form error:", err);
-    res.send("Error loading product for edit");
-  }
-});
+    let sortOption = { createdAt: -1 };
+    if (sort === "priceAsc") sortOption = { price: 1 };
+    if (sort === "priceDesc") sortOption = { price: -1 };
+    if (sort === "nameAsc") sortOption = { name: 1 };
+    if (sort === "nameDesc") sortOption = { name: -1 };
 
-// Handle edit form submission
-router.post("/edit/:id", async (req, res) => {
-  if (!req.session.user || req.session.user.role !== "seller") {
-    return res.send("Unauthorized");
-  }
+    const products = await Product.find(filter).sort(sortOption);
 
-  try {
-    const { name, description, price, quantity } = req.body;
-    const product = await Product.findById(req.params.id);
-
-    if (!product || product.sellerId.toString() !== req.session.user.id) {
-      return res.send("Unauthorized – cannot edit this product");
-    }
-
-    product.name = name;
-    product.description = description;
-    product.price = price;
-    product.quantity = quantity;
-
-    await product.save();
-    console.log("✅ Product updated:", product.name);
-
-    res.redirect("/products/dashboard");
-  } catch (err) {
-    console.error("❌ Edit save error:", err);
-    res.send("Error updating product");
-  }
-});
-
-// Handle edit form submission
-router.post("/edit/:id", async (req, res) => {
-  if (!req.session.user || req.session.user.role !== "seller") {
-    return res.send("Unauthorized");
-  }
-
-  try {
-    const { name, description, price, quantity } = req.body;
-    const product = await Product.findById(req.params.id);
-
-    if (!product || product.sellerId.toString() !== req.session.user.id) {
-      return res.send("Unauthorized – cannot edit this product");
-    }
-
-    product.name = name;
-    product.description = description;
-    product.price = price;
-    product.quantity = quantity;
-
-    await product.save();
-
-    // ✅ Set success message
-    req.session.message = "Product updated successfully!";
-    req.session.save(() => {
-      res.redirect("/products/dashboard");
+    res.render("products", {
+      products,
+      user: req.session.user || null,
+      q,
+      minPrice,
+      maxPrice,
+      category,
+      sort,
+      totalEarnings: null
     });
   } catch (err) {
-    console.error("❌ Edit save error:", err);
-    res.send("Error updating product");
-  }
-});
-
-// Delete product
-router.post("/delete/:id", async (req, res) => {
-  if (!req.session.user || req.session.user.role !== "seller") {
-    return res.send("Unauthorized");
-  }
-
-  try {
-    const product = await Product.findById(req.params.id);
-
-    if (!product || product.sellerId.toString() !== req.session.user.id) {
-      return res.send("Unauthorized – cannot delete this product");
-    }
-
-    await Product.deleteOne({ _id: req.params.id });
-
-    // ✅ Set success message
-    req.session.message = "Product deleted successfully!";
-    req.session.save(() => {
-      res.redirect("/products/dashboard");
-    });
-  } catch (err) {
-    console.error("❌ Delete error:", err);
-    res.send("Error deleting product");
+    console.error("❌ Product fetch error:", err);
+    res.status(500).send("Error loading products");
   }
 });
 

@@ -6,14 +6,14 @@
 <% if (products.length === 0) { %>
   <p>You have not added any products yet.</p>
 <% } else { %>
-  <table class="table table-bordered">
-    <thead>
+  <table class="table table-bordered table-striped align-middle">
+    <thead class="table-light">
       <tr>
-        <th>Product</th>
-        <th>Stock</th>
-        <th>Price (KSh)</th>
-        <th>Potential Earnings (KSh)</th>
-        <th>Actions</th>
+        <th scope="col">Product</th>
+        <th scope="col">Stock</th>
+        <th scope="col">Price (KSh)</th>
+        <th scope="col">Potential Earnings (KSh)</th>
+        <th scope="col">Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -21,14 +21,12 @@
         <tr>
           <td><%= p.name %></td>
           <td><%= p.quantity %></td>
-          <td><%= p.price %></td>
-          <td><%= p.price * p.quantity %></td>
+          <td>KSh <%= p.price.toFixed(2) %></td>
+          <td>KSh <%= (p.price * p.quantity).toFixed(2) %></td>
           <td>
-            <!-- Delete button -->
-            <form action="/products/delete/<%= p._id %>" method="POST" style="display:inline;">
+            <form action="/products/delete/<%= p._id %>" method="POST" class="d-inline">
               <button type="submit" class="btn btn-danger btn-sm">Delete</button>
             </form>
-            <!-- Edit button (optional) -->
             <a href="/products/edit/<%= p._id %>" class="btn btn-warning btn-sm">Edit</a>
           </td>
         </tr>
@@ -36,5 +34,7 @@
     </tbody>
   </table>
 
-  <p class="fw-bold">Total Potential Earnings: KSh <%= totalEarnings %></p>
+  <p class="fw-bold mt-3">
+    Total Potential Earnings: KSh <%= totalEarnings.toFixed(2) %>
+  </p>
 <% } %>
