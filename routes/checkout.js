@@ -16,10 +16,6 @@ router.post("/", async (req, res) => {
   try {
     const cart = req.session.cart || [];
 
-<<<<<<< HEAD
-    for (let item of cart) {
-      const product = await Product.findById(item.id); // ✅ use item.id
-=======
     if (!cart.length) {
       return res.status(400).send("Cart is empty");
     }
@@ -35,34 +31,28 @@ router.post("/", async (req, res) => {
     // STOCK REDUCTION
     for (const item of cart) {
       const product = await Product.findById(item.productId);
->>>>>>> 55bf53852afa8c7bc11cd0d966ed30bb960de6d5
 
       if (!product) {
         return res.status(404).send(`Product not found: ${item.productId}`);
       }
 
-<<<<<<< HEAD
-      // Restriction: seller cannot buy their own product
-      if (
-        req.session.user &&
-        req.session.user.role === "seller" &&
-        product.sellerId.toString() === req.session.user.id
-      ) {
-        return res
-          .status(403)
-          .send(`❌ Sellers cannot purchase their own product: ${product.name}`);
-=======
-      if (product.quantity < item.quantity) {
-        return res.status(400).send(`Not enough stock for ${product.name}`);
->>>>>>> 55bf53852afa8c7bc11cd0d966ed30bb960de6d5
-      }
+// Restriction: seller cannot buy their own product
+if (
+  req.session.user &&
+  req.session.user.role === "seller" &&
+  product.sellerId.toString() === req.session.user.id
+) {
+  return res
+    .status(403)
+    .send(`❌ Sellers cannot purchase their own product: ${product.name}`);
+}
 
-      // Prevent overselling
-      if (product.quantity < item.quantity) {
-        return res
-          .status(400)
-          .send(`❌ Not enough stock for ${product.name}. Available: ${product.quantity}`);
-      }
+// Prevent overselling
+if (product.quantity < item.quantity) {
+  return res
+    .status(400)
+    .send(`❌ Not enough stock for ${product.name}. Available: ${product.quantity}`);
+}
 
       // Deduct stock
       product.quantity -= item.quantity;
@@ -100,5 +90,6 @@ router.post("/", async (req, res) => {
     res.status(500).send("Error during checkout");
   }
 });
+
 
 export default router;

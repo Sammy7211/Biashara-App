@@ -8,11 +8,6 @@ router.post("/add/:id", async (req, res) => {
   const product = await Product.findById(req.params.id);
   if (!product) return res.send("Product not found");
 
-<<<<<<< HEAD
-  // Restriction: seller cannot buy their own product
-  if (req.session.user.role === "seller" && product.sellerId.toString() === req.session.user.id) {
-    return res.send("❌ Sellers cannot buy their own products");
-=======
   if (!req.session.cart) req.session.cart = [];
 
   // Check if product already in cart
@@ -26,7 +21,6 @@ router.post("/add/:id", async (req, res) => {
       price: product.price,
       quantity: quantity
     });
->>>>>>> 55bf53852afa8c7bc11cd0d966ed30bb960de6d5
   }
  const requestedQty = parseInt(req.body.quantity || 1);
 
@@ -60,18 +54,12 @@ router.get("/cart", (req, res) => {
   res.render("cart", { cart, total });
 });
 
-<<<<<<< HEAD
-// Remove item
-router.get("/cart/remove/:id", (req, res) => {
-  req.session.cart = (req.session.cart || []).filter(i => i.id !== req.params.id);
-=======
 // Remove from cart
 router.get("/remove/:id", (req, res) => {
   const productId = req.params.id;
   if (req.session.cart) {
     req.session.cart = req.session.cart.filter(item => item.productId !== productId);
   }
->>>>>>> 55bf53852afa8c7bc11cd0d966ed30bb960de6d5
   res.redirect("/cart");
 });
 
@@ -79,12 +67,6 @@ router.get("/remove/:id", (req, res) => {
 router.post("/cart/update/:id", (req, res) => {
   const { quantity } = req.body;
 
-<<<<<<< HEAD
-  req.session.cart = (req.session.cart || []).map(i => {
-    if (i.id === req.params.id) i.quantity = parseInt(quantity);
-    return i;
-  });
-=======
   if (req.session.cart) {
     req.session.cart = req.session.cart.map(item => {
       if (item.productId === productId) {
@@ -93,7 +75,6 @@ router.post("/cart/update/:id", (req, res) => {
       return item;
     });
   }
->>>>>>> 55bf53852afa8c7bc11cd0d966ed30bb960de6d5
 
   res.redirect("/cart");
 });
