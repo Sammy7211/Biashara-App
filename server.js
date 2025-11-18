@@ -5,7 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import session from "express-session";
 import expressLayouts from "express-ejs-layouts";
-import fs from "fs"
+import fs from "fs";
 
 // Routes
 import authRoutes from "./routes/auth.js";
@@ -26,12 +26,16 @@ app.use(cookieParser());
 // Serve static files from public
 app.use(express.static(path.join(__dirname, "public")));
 
-
-
+// Session middleware (must come before routes)
 app.use(session({
   secret: "biasharaSecret123",
   resave: false,
-  saveUninitialized: true
+  saveUninitialized: false, // don't create empty sessions
+  cookie: {
+    httpOnly: true,
+    secure: false,           // set true if using HTTPS
+    maxAge: 1000 * 60 * 60   // 1 hour
+  }
 }));
 
 // ===== View Engine =====
@@ -41,13 +45,10 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
 // ===== Routes =====
-// Mount auth routes at root so /login and /register work directly
-app.use("/", authRoutes);
-
-// Other routes
-app.use("/products", productRoutes);   // -> /products, /products/add
-app.use("/cart", cartRoutes);          // -> /cart/add/:id, /cart/remove/:id
-app.use("/checkout", checkoutRoutes);  // -> /checkout
+app.use("/", authRoutes);            // -> /login, /register
+app.use("/products", productRoutes); // -> /products, /products/add
+app.use("/cart", cartRoutes);        // -> /cart/add/:id, /cart/remove/:id
+app.use("/checkout", checkoutRoutes);// -> /checkout
 
 // Redirect root to /login
 app.get("/", (req, res) => {
@@ -62,6 +63,12 @@ app.get("/test-image/:filename", (req, res) => {
     if (err) res.send(`❌ File does NOT exist: ${imgPath}`);
     else res.send(`✅ File exists: ${imgPath}`);
   });
+});
+
+// ===== Error handling =====
+app.use((err, req, res, next) => {
+  console.error("❌ Server error:", err.stack);
+  res.status(500).send("Something went wrong!");
 });
 
 // ===== MongoDB =====

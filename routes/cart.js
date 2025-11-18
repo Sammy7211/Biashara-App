@@ -8,75 +8,81 @@ router.post("/add/:id", async (req, res) => {
   const product = await Product.findById(req.params.id);
   if (!product) return res.send("Product not found");
 
-  if (!req.session.cart) req.session.cart = [];
-
-  // Check if product already in cart
-  const existing = req.session.cart.find(item => item.productId === productId);
-  if (existing) {
-    existing.quantity += quantity;
-  } else {
-    req.session.cart.push({
-      productId: product._id.toString(),   // ✅ consistent key
-      name: product.name,
-      price: product.price,
-      quantity: quantity
-    });
+  // Restriction: seller cannot buy their own product
+  if (
+    req.session.user &&
+    req.session.user.role === "seller" &&
+    product.sellerId.toString() === req.session.user.id
+  ) {
+    return res.send("❌ Sellers cannot buy their own products");
   }
- const requestedQty = parseInt(req.body.quantity || 1);
 
-  // Stock check
+  const requestedQty = Math.max(1, parseInt(req.body.quantity || 1));
+
   if (requestedQty > product.quantity) {
     return res.send("❌ Not enough stock available");
   }
 
-  // Deduct stock immediately
   product.quantity -= requestedQty;
-  await product.save()
-
+  await product.save();
 
   if (!req.session.cart) req.session.cart = [];
   req.session.cart.push({
-    id: product._id.toString(),
+    productId: product._id.toString(), // ✅ consistent key
     name: product.name,
     price: product.price,
     quantity: requestedQty
   });
 
-  req.session.cart = req.session.cart; // ensure session updated
   res.redirect("/cart");
 });
 
-
 // View cart
-router.get("/cart", (req, res) => {
+router.get("/", (req, res) => {
   const cart = req.session.cart || [];
   const total = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
   res.render("cart", { cart, total });
 });
 
-// Remove from cart
+// Remove item
 router.get("/remove/:id", (req, res) => {
-  const productId = req.params.id;
-  if (req.session.cart) {
-    req.session.cart = req.session.cart.filter(item => item.productId !== productId);
-  }
+  req.session.cart = (req.session.cart || []).filter(i => i.productId !== req.params.id);
   res.redirect("/cart");
 });
 
 // Update quantity
-router.post("/cart/update/:id", (req, res) => {
+router.post("/update/:id", async (req, res) => {
   const { quantity } = req.body;
+  const productId = req.params.id;
+
+  const product = await Product.findById(productId);
+  if (!product) return res.send("Product not found");
+
+  const newQty = Math.max(1, parseInt(quantity));
+
+  if (newQty > product.quantity + getCartItemQuantity(req.session.cart, productId)) {
+    return res.send("❌ Not enough stock available to update quantity");
+  }
 
   if (req.session.cart) {
     req.session.cart = req.session.cart.map(item => {
       if (item.productId === productId) {
-        return { ...item, quantity: parseInt(quantity) };
+        return { ...item, quantity: newQty };
       }
       return item;
     });
   }
 
+  const currentCartQty = getCartItemQuantity(req.session.cart, productId);
+  product.quantity = product.quantity + currentCartQty - newQty;
+  await product.save();
+
   res.redirect("/cart");
 });
+
+function getCartItemQuantity(cart, productId) {
+  const item = (cart || []).find(i => i.productId === productId);
+  return item ? item.quantity : 0;
+}
 
 export default router;
